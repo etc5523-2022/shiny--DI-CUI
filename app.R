@@ -1,117 +1,105 @@
 library(shiny)
 library(tidyverse)
+alcohol <- read_csv(here::here("week13_alcohol_global.csv"))
+
 
 ui <- fluidPage(
 
-    titlePanel("Old Faithful Geyser Data"),
+    titlePanel("Global alcohol Comsumption"),
 
-    h3("1. What number of bins do you stop seeing bimodality in the waiting time?"),
+    h2("The total litres of pure alcohol"),
+    h3("1.1 What number of bins do you stop seeing the count of country distribution ?"),
     fluidRow(
       sidebarLayout(
           sidebarPanel(
               sliderInput("bins",
                           "Number of bins:",
-                          min = 1,
-                          max = 50,
-                          value = 30)
+                          min = 0.1,
+                          max = 1,
+                          value = 0.5)
           ),
 
           mainPanel(
-             plotOutput("distPlot")
-          )
+             plotOutput("distPlot"))
       )
     ),
 
-    h3("2. How do the different geoms change the view of the data?"),
+    h3("1.2 Let's choose a number to see country name which the total litres of pure alcohol is equal or greater than the number."),
     fluidRow(
       sidebarLayout(
         sidebarPanel(
-          radioButtons("geom",
-                      "Geom choice:",
-                      choices = c("geom_point",
-                                  "geom_density_2d",
-                                  "geom_density_2d_filled",
-                                  "geom_bin_2d",
-                                  "geom_hex"))
+          numericInput("n", "The total litres of pure alcohol >= ",
+                       value = 10, min = 0, max = 14.4)
         ),
 
         mainPanel(
-          plotOutput("plot")
+          textOutput("countryname") #plot
         )
       )
     ),
 
-    h3("3. Is a mixture of two normal distribution good fit on eruption time?"),
+    h2("2 Alcohol consumption by country"),
+
+    h3("2.1 Let's see the world consumption of one alcohol "),
     fluidRow(
       sidebarLayout(
         sidebarPanel(
+          radioButtons("Q1", "Do you like drink?",
+                                      choices = c("Yes",
+                                                  "No")),
+          radioButtons("Q2", "If you like drink, which one would you like to drink?",
+                                    choices = c("Beer",
+                                                "Spirit",
+                                                "Wine")),
+          h4("Adjust the number of bins (if needed):"),
+
           sliderInput("bins2",
-                      "Adjust the number of bins (if needed):",
+                      "Number of bins:",
                       min = 1,
-                      max = 50,
-                      value = 30),
-          "Enter your guess for the:",
-          numericInput("p", "Mixing probability:",
-                       value = 0.35, min = 0, max = 1),
-          numericInput("mean1", "Mean of the first group:",
-                       value = 2.02),
-          numericInput("mean2", "Mean of the second group:",
-                       value = 4.27),
-          numericInput("sd1", "Standard deviation of the first group:",
-                       value = 0.24, min = 0),
-          numericInput("sd2", "Standard deviation of the second group:",
-                       value = 0.44, min = 0)
+                      max = 30,
+                      value = 10)
+        ),
+        mainPanel(
+            plotOutput("alcohol_consumption")
+          )
+          )
+        ),
+
+    h3("2.2 Let's make a plot"),
+    fluidRow(
+      sidebarLayout(
+        sidebarPanel(
+          selectizeInput("countries", "Select Countries to show the plot",
+                         choices = c(alcohol$country),
+                         multiple = TRUE
+          ),
+          radioButtons("alcohol", "Select one alcohol to show the plot",
+                       choices = c("Beer",
+                                   "Spirit",
+                                   "Wine"))
         ),
 
         mainPanel(
-          plotOutput("mixDistFit")
+          plotOutput("country_consumption"),
+          textOutput("text")
         )
       )
     ),
 
 
-    fluidRow(
-      column(10,
-             div(class = "about",
-                 uiOutput('about'))
-      )
-    ),
-    includeCSS("styles.css")
+  fluidRow(
+       column(10,
+              div(class = "about",
+                  uiOutput('about'))
+       )
+   ),
+     includeCSS("styles.css")
 )
 
-server <- function(input, output) {
 
-    output$distPlot <- renderPlot({
-        ggplot(faithful, aes(waiting)) +
-         geom_histogram(bins = input$bins, color = "white") +
-         theme_bw(base_size = 14) +
-         labs(x = "Waiting time", y = "Count")
-    })
+ server <- function(input, output) {
 
-    output$plot <- renderPlot({
-      ggplot(faithful, aes(waiting, eruptions)) +
-        get(input$geom)() +
-        theme_bw(base_size = 14) +
-        labs(x = "Waiting time", y = "Eruption time")
-    })
-
-    output$mixDistFit <- renderPlot({
-      df <- data.frame(x = seq(min(faithful$eruptions), max(faithful$eruptions), length = 1000)) %>%
-        mutate(density = input$p * dnorm(x, input$mean1, input$sd1) +
-                         (1 - input$p) * dnorm(x, input$mean2, input$sd2))
-
-      ggplot(faithful, aes(eruptions)) +
-        geom_histogram(aes(y = stat(density)), bins = input$bins2, color = "white") +
-        geom_line(data = df, aes(x = x, y = density), color = "red", size = 2) +
-        theme_bw(base_size = 14) +
-        labs(x = "Eruption time", y = "Density")
-    })
-
-    output$about <- renderUI({
-      knitr::knit("about.Rmd", quiet = TRUE) %>%
-        markdown::markdownToHTML(fragment.only = TRUE) %>%
-        HTML()
-    })
 }
 
-shinyApp(ui = ui, server = server)
+
+ shinyApp(ui = ui, server = server)
