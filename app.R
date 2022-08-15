@@ -71,10 +71,12 @@ ui <- fluidPage(
     fluidRow(
       sidebarLayout(
         sidebarPanel(
-          selectizeInput("countries", "Select Countries to show the plot",
+          selectizeInput("countries",
+                         "Select Countries to show the plot(less than 10 countries):",
                          choices = c(alcohol$country),
                          selected = alcohol$country[1:6],
-                         multiple = TRUE
+                         multiple = TRUE,
+                         options = list(maxItems = 10)
           ),
           radioButtons("servings", "Select one alcohol servings to show the plot",
                        choices = c(  "beer servings",
@@ -85,8 +87,8 @@ ui <- fluidPage(
         ),
 
         mainPanel(
-          plotOutput("countrycons"),
-          textOutput("text")
+          plotOutput("countrycons")
+         # textOutput("text")
         )
       )
     ),
@@ -196,16 +198,16 @@ ui <- fluidPage(
   })
 
 
-  sample1 <- reactive({
-    sample(c("Awesome!", "That's great!", "Well done!"),
-           size = 1,
-           replace = FALSE)
-  })
-
-  output$text <- renderText({
-      sample1()
-
-  })
+  # sample1 <- reactive({
+  #   sample(c("Awesome!", "That's great!", "Well done!"),
+  #          size = 1,
+  #          replace = FALSE)
+  # })
+  #
+  # output$text <- renderText({
+  #     sample1()
+  #
+  # })
 
 
 }
