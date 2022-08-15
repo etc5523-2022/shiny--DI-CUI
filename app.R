@@ -1,5 +1,7 @@
 library(shiny)
 library(tidyverse)
+library(shinyWidgets)
+
 alcohol <- read_csv(here::here("week13_alcohol_global.csv"))
 
 
@@ -24,35 +26,35 @@ ui <- fluidPage(
       )
     ),
 
-    h3("1.2 Let's choose a number to see country name which the total litres of pure alcohol is equal or greater than the number."),
+    h3("1.2 Let's choose number to see country name which the total litres of pure alcohol in the range."),
     fluidRow(
       sidebarLayout(
         sidebarPanel(
-          numericInput("n", "The total litres of pure alcohol >= ",
-                       value = 10, min = 0, max = 14.4)
-        ),
-
+          numericInput("n1", "The total litres of pure alcohol >=",
+                       value = 5, min = 0, max = 14, step = 0.5),
+          numericInput("n2", "The total litres of pure alcohol <=",
+                       value = 10, min = 0, max = 15, step = 0.5)
+      ),
         mainPanel(
-          textOutput("countryname") #plot
+          textOutput("countryname")
         )
       )
     ),
 
     h2("2 Alcohol consumption by country"),
 
-    h3("2.1 Let's see the world consumption of one alcohol "),
-    fluidRow(
+    h3("2.1 Let's see the world consumption of alcohol "),
+     fluidRow(
       sidebarLayout(
-        sidebarPanel(
-          radioButtons("Q1", "Do you like drink?",
-                                      choices = c("Yes",
-                                                  "No")),
-          radioButtons("Q2", "If you like drink, which one would you like to drink?",
-                                    choices = c("Beer",
-                                                "Spirit",
-                                                "Wine")),
-          h4("Adjust the number of bins (if needed):"),
+          sidebarPanel(
+            radioButtons("Q1", "Do you like drink?",
+                         choices = c("Yes",
+                                     "No")),
+            selectizeInput("type", "If you like drink, which one would you like to drink?",
+                           choices = c("Beer", "Spirit", "Wine"),
+                           selected = "Beer"),
 
+          h5("Adjust the number of bins (if needed):"),
           sliderInput("bins2",
                       "Number of bins:",
                       min = 1,
@@ -60,7 +62,7 @@ ui <- fluidPage(
                       value = 10)
         ),
         mainPanel(
-            plotOutput("alcohol_consumption")
+            plotOutput("disalcohol")
           )
           )
         ),
@@ -71,16 +73,19 @@ ui <- fluidPage(
         sidebarPanel(
           selectizeInput("countries", "Select Countries to show the plot",
                          choices = c(alcohol$country),
+                         selected = alcohol$country[1:6],
                          multiple = TRUE
           ),
-          radioButtons("alcohol", "Select one alcohol to show the plot",
-                       choices = c("Beer",
-                                   "Spirit",
-                                   "Wine"))
+          radioButtons("servings", "Select one alcohol servings to show the plot",
+                       choices = c(  "beer servings",
+                                    "spirit servings",
+                                   "wine servings"),
+                       selected = "wine servings"
+                       )
         ),
 
         mainPanel(
-          plotOutput("country_consumption"),
+          plotOutput("countrycons"),
           textOutput("text")
         )
       )
@@ -99,7 +104,116 @@ ui <- fluidPage(
 
  server <- function(input, output) {
 
+  output$distPlot <- renderPlot({
+    ggplot(alcohol, aes(x = total_litres_of_pure_alcohol))+
+      geom_histogram(binwidth = input$bins, color = "white")+
+      scale_x_continuous(breaks = seq(0,15,1))+
+      xlab("Total litres of pure alcohol")+
+      ggtitle("Count of countries which the total litres of pure alcohol")+
+      theme(element_text(size = 30))+
+      theme_bw(base_size = 14)
+     })
+
+  output$countryname <- renderText({
+    if (input$n1 > input$n2){
+
+      "Please set the right range."
+
+    } else {
+    country_choose <- alcohol %>%
+              filter(total_litres_of_pure_alcohol >= input$n1 &
+                     total_litres_of_pure_alcohol <= input$n2) %>%
+        select(country) %>%
+        pull()
+    }
+
+     })
+
+
+  output$disalcohol <- renderPlot({
+   if (input$type == "Beer"){
+      ggplot(alcohol, aes(x = beer_servings))+
+         geom_histogram(binwidth = input$bins2, color = "white")+
+         xlab("Beer servings")+
+         ggtitle("Count of countries")+
+         theme_bw(base_size = 14)
+
+   } else if(input$type == "Spirit"){
+      ggplot(alcohol, aes(x = spirit_servings))+
+         geom_histogram(binwidth = input$bins2, color = "white")+
+         xlab("Spirit servings")+
+         ggtitle("Count of countries")+
+         theme_bw(base_size = 14)
+   } else {
+      ggplot(alcohol, aes(x = wine_servings))+
+         geom_histogram(binwidth = input$bins2, color = "white")+
+         xlab("Wine servings")+
+         ggtitle("Count of countries")+
+         theme_bw(base_size = 14)
+
+}
+   })
+
+
+  selectcountry <- reactive({
+    df <- alcohol %>%
+      filter(country %in% input$countries)
+    return(df)
+  })
+
+  output$countrycons <- renderPlot({
+
+    if (input$servings == "beer servings"){
+      selectcountry() %>%
+      ggplot( aes(x = country, y = beer_servings))+
+        geom_col()+
+        xlab("Country")+
+        ylab("Beer servings")+
+        ggtitle("Beer servings by country")+
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+        theme_bw(base_size = 14)
+
+    } else if(input$servings == "spirit servings"){
+      selectcountry() %>%
+        ggplot( aes(x = country, y = spirit_servings))+
+        geom_col()+
+        xlab("Country")+
+        ylab("Spirit servings")+
+        ggtitle("Spirit servings by country")+
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+        theme_bw(base_size = 14)
+
+    } else {
+      selectcountry() %>%
+        ggplot( aes(x = country, y = wine_servings))+
+        geom_col()+
+        xlab("Country")+
+        ylab("Wine servings")+
+        ggtitle("Wine servings by country")+
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+        theme_bw(base_size = 14)
+    }
+  })
+
+
+  sample1 <- reactive({
+    sample(c("Awesome!", "That's great!", "Well done!"),
+           size = 1,
+           replace = FALSE)
+  })
+
+  output$text <- renderText({
+      sample1()
+
+  })
+
+
 }
 
 
+
+
  shinyApp(ui = ui, server = server)
+
+
+
