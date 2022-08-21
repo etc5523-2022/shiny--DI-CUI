@@ -1,6 +1,6 @@
 library(shiny)
 library(tidyverse)
-library(shinyWidgets)
+
 
 alcohol <- read_csv(here::here("week13_alcohol_global.csv"))
 
@@ -79,7 +79,7 @@ ui <- fluidPage(
           selectizeInput("countries",
                          "Select Countries to show the plot(less than 10 countries):",
                          choices = c(alcohol$country),
-                         selected = c("Guinea-Bissau", "Honduras", "Israel", "Lesotho", "Mauritius", "Samoa", "United Arab Emirates", "Zambia"),
+                         selected = alcohol$country[1:6],
                          multiple = TRUE,
                          options = list(maxItems = 10)
           ),
@@ -93,7 +93,6 @@ ui <- fluidPage(
 
         mainPanel(
           plotOutput("countrycons")
-         # textOutput("text")
         )
       )
     )
@@ -122,7 +121,7 @@ tabPanel("About",
       geom_histogram(binwidth = input$bins, color = "white")+
       scale_x_continuous(breaks = seq(0,15,1))+
       xlab("Total litres of pure alcohol")+
-      ggtitle("Count of countries which the total litres of pure alcohol")+
+      ggtitle("Distribution of the total litres of pure alcohol")+
       theme(element_text(size = 30))+
       theme_bw(base_size = 14)
      })
@@ -135,9 +134,8 @@ tabPanel("About",
     } else {
     country_choose <- alcohol %>%
               filter(total_litres_of_pure_alcohol >= input$n1 &
-                     total_litres_of_pure_alcohol <= input$n2) %>%
-        select(country) %>%
-        pull()
+                     total_litres_of_pure_alcohol <= input$n2)
+      paste0(country_choose$country, sep = " , ")
     }
 
      })
@@ -148,20 +146,20 @@ tabPanel("About",
       ggplot(alcohol, aes(x = beer_servings))+
          geom_histogram(binwidth = input$bins2, color = "white")+
          xlab("Beer servings")+
-         ggtitle("Count of countries")+
+         ggtitle("Distribution of beer servings")+
          theme_bw(base_size = 14)
 
    } else if(input$type == "Spirit"){
       ggplot(alcohol, aes(x = spirit_servings))+
          geom_histogram(binwidth = input$bins2, color = "white")+
          xlab("Spirit servings")+
-         ggtitle("Count of countries")+
+         ggtitle("Distribution of spirit servings")+
          theme_bw(base_size = 14)
    } else {
       ggplot(alcohol, aes(x = wine_servings))+
          geom_histogram(binwidth = input$bins2, color = "white")+
          xlab("Wine servings")+
-         ggtitle("Count of countries")+
+         ggtitle("Distribution of wine servings")+
          theme_bw(base_size = 14)
 
 }
@@ -209,16 +207,6 @@ tabPanel("About",
   })
 
 
-  # sample1 <- reactive({
-  #   sample(c("Awesome!", "That's great!", "Well done!"),
-  #          size = 1,
-  #          replace = FALSE)
-  # })
-  #
-  # output$text <- renderText({
-  #     sample1()
-  #
-  # })
 
   output$about <- renderUI({
     knitr::knit("about.Rmd", quiet = TRUE) %>%
