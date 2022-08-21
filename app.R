@@ -7,7 +7,7 @@ alcohol <- read_csv(here::here("week13_alcohol_global.csv"))
 
 ui <- fluidPage(
 
-    titlePanel("Global alcohol Comsumption"),
+    titlePanel("Global Alcohol Comsumption"),
 
     tabsetPanel(
       tabPanel("1 The total litres of pure alcohol"
