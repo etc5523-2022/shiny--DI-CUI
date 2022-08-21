@@ -1,7 +1,9 @@
 
 #### Data
 
-This data shows the beer, spirit and wine consumption and total litres of pure alcohol by country. The data source is from Thomas Mock (2022). Tidy Tuesday: A weekly data project aimed at the R ecosystem. [https://github.com/rfordatascience/tidytuesday](https://github.com/rfordatascience/tidytuesday).
+This data shows the beer, spirit and wine consumption and total litres of pure alcohol by country. The data source is from Thomas Mock (2022). Tidy Tuesday: A weekly data project aimed at the R ecosystem. 
+
+[Glocal alcohol consumption data](https://github.com/rfordatascience/tidytuesday/blob/master/data/2018/2018-06-26/week13_alcohol_global.csv).
 
 
 

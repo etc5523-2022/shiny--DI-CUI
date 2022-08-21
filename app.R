@@ -51,10 +51,10 @@ ui <- fluidPage(
      fluidRow(
       sidebarLayout(
           sidebarPanel(
-            radioButtons("Q1", "Do you like drink?",
+            radioButtons("Q1", "Do you like to drink?",
                          choices = c("Yes",
                                      "No")),
-            selectizeInput("type", "If you like drink, which one would you like to drink?
+            selectizeInput("type", "If you like to drink, which one would you like to drink?
                            (or which one would you like to show in the plot)",
                            choices = c("Beer", "Spirit", "Wine"),
                            selected = "Beer"),
