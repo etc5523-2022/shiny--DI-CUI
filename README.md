@@ -8,4 +8,4 @@ This is a app for the Global alcohol Comsumption.
 
 The goal of the app is help users to know well the global alcohol servings. i.e: The histogram plot of total litres of pure alcohol and alcohol servings;  Alcohol servings comparison between countries.
 
-The link to the app can be found at [https://ebsmonash.shinyapps.io/etc5523-assessment1-sample/](https://ebsmonash.shinyapps.io/etc5523-assessment1-sample/)
+The link to the app can be found at [https://di-cui.shinyapps.io/shiny--DI-CUI/](https://di-cui.shinyapps.io/shiny--DI-CUI/)

@@ -14,6 +14,10 @@ h3 {
   font-size: 1.5em;
 }
 
+h2 {
+  color: #006DAE;
+}
+
 details > summary:first-of-type {
     display: list-item;
     counter-increment: list-item 0;

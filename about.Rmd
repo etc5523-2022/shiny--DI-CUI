@@ -1,7 +1,7 @@
 
 #### Data
 
-This data shows the beer, spirit and wine consumption and total litres of pure alcohol by county. The data source is from Thomas Mock (2022). Tidy Tuesday: A weekly data project aimed at the R ecosystem. [https://github.com/rfordatascience/tidytuesday](https://github.com/rfordatascience/tidytuesday).
+This data shows the beer, spirit and wine consumption and total litres of pure alcohol by country. The data source is from Thomas Mock (2022). Tidy Tuesday: A weekly data project aimed at the R ecosystem. [https://github.com/rfordatascience/tidytuesday](https://github.com/rfordatascience/tidytuesday).
 
 
 
@@ -9,11 +9,11 @@ This data shows the beer, spirit and wine consumption and total litres of pure a
 
 The purpose of the app is to:
 
-1. Show the count distribution of total litres of pure alcohol.
+1. Show distribution of total litres of pure alcohol.
 
-2. Show the global alcohol consumption distribution by alcohol type.
+2. Show distribution of global alcohol consumption by alcohol type.
 
-3. Show the global alcohol consumption by country interactively.
+3. Show global alcohol consumption by country interactively.
 
 This app shows that beer has the highest servings while wine servings are the least by using histogram plots. And then, this app could help users to see the country name in a particular alcohol litres range and to see the alcohol servings comparison between countries by personalized choice.
 
