@@ -77,7 +77,7 @@ ui <- fluidPage(
       sidebarLayout(
         sidebarPanel(
           selectizeInput("countries",
-                         "Select Countries to show the plot(less than 10 countries):",
+                         "Select Countries to show the plot (less than or equal to 10 countries):",
                          choices = c(alcohol$country),
                          selected = alcohol$country[1:6],
                          multiple = TRUE,

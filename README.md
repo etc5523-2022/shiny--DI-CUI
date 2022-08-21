@@ -1,5 +1,5 @@
 
-# Global alcohol Comsumption
+# Global Alcohol Comsumption
 
 This is a app for the Global alcohol Comsumption. 
 
