@@ -1,111 +1,115 @@
 library(shiny)
 library(tidyverse)
-
+library(plotly)
+library(gghighlight)
 
 alcohol <- read_csv(here::here("week13_alcohol_global.csv"))
+
+map <- map_data("world")
+
+map$region <- gsub("Russia", "Russian Federation", map$region)
+
+map_data <- map %>%
+  left_join(alcohol, by = c("region"= "country"))
 
 
 ui <- fluidPage(
 
-    titlePanel("Global Alcohol Comsumption"),
+  titlePanel("Global Alcohol Comsumption"),
 
-    tabsetPanel(
-      tabPanel("1 The total litres of pure alcohol"
-,
-    h3("1.1 What number of bins do you stop seeing the count of country distribution ?"),
-    fluidRow(
-      sidebarLayout(
-          sidebarPanel(
-              sliderInput("bins",
-                          "Number of bins:",
-                          min = 0.1,
-                          max = 1,
-                          value = 0.5,
-                          step = 0.1)
-          ),
+  tabsetPanel(
+    tabPanel("1 The total litres of pure alcohol"
+             ,
+             h3("1.1 What number of bins do you stop seeing the count of country distribution?"),
+             fluidRow(
+               sidebarLayout(
+                 sidebarPanel(
+                   sliderInput("bins",
+                               "Number of bins:",
+                               min = 0.1,
+                               max = 1,
+                               value = 0.5,
+                               step = 0.1)
+                 ),
 
-          mainPanel(
-             plotOutput("distPlot"))
-      )
+                 mainPanel(
+                   plotOutput("distPlot"))
+               )
+             ),
+
+             h3("1.2 What number of range do you stop seeing country which the total litres of pure alcohol in the range?"),
+             fluidRow(
+               sidebarLayout(
+                 sidebarPanel(
+                   sliderInput("Litres", "The range of total litres of pure alcohol",
+                               min = 0,
+                               max = 15,
+                               value = c(0,15),
+                               step = 0.1)
+                 ),
+                 mainPanel(
+                   plotlyOutput("countryname")
+                 )
+               )
+             )
     ),
 
-    h3("1.2 Let's choose number to see country name which the total litres of pure alcohol in the range."),
-    fluidRow(
-      sidebarLayout(
-        sidebarPanel(
-          numericInput("n1", "The total litres of pure alcohol >=",
-                       value = 5, min = 0, max = 14, step = 0.5),
-          numericInput("n2", "The total litres of pure alcohol <=",
-                       value = 10, min = 0, max = 15, step = 0.5)
-      ),
-        mainPanel(
-          textOutput("countryname")
-        )
-      )
-    ),
-),
+    tabPanel("2 Alcohol servings",
 
-  tabPanel("2 Alcohol consumption",
+             h3("2.1 Global alcohol sevings of beer, spirit and wine"),
+             fluidRow(
+               sidebarLayout(
+                 sidebarPanel(
 
-    h3("2.1 Let's see the world consumption of alcohol "),
-     fluidRow(
-      sidebarLayout(
-          sidebarPanel(
-            radioButtons("Q1", "Do you like to drink?",
-                         choices = c("Yes",
-                                     "No")),
-            selectizeInput("type", "If you like to drink, which one would you like to drink?
-                           (or which one would you like to show in the plot)",
-                           choices = c("Beer", "Spirit", "Wine"),
-                           selected = "Beer"),
+                   selectizeInput("type", "Select alcohol servings you would like to show in the plot)",
+                                  choices = c("Beer", "Spirit", "Wine"),
+                                  selected = "Beer"),
 
-          h5("Adjust the number of bins (if needed):"),
-          sliderInput("bins2",
-                      "Number of bins:",
-                      min = 1,
-                      max = 30,
-                      value = 10)
-        ),
-        mainPanel(
-            plotOutput("disalcohol")
-          )
-          )
-        ),
+                   sliderInput("range", "The range of servings",
+                               min = 0,
+                               max = 450,
+                               value = c(0,450),
+                               step = 50)
+                 ),
+                 mainPanel(
+                   plotlyOutput("disalcohol")
+                 )
+               )
+             ),
 
-    h3("2.2 Let's make a plot"),
-    fluidRow(
-      sidebarLayout(
-        sidebarPanel(
-          selectizeInput("countries",
-                         "Select Countries to show the plot (less than or equal to 10 countries):",
-                         choices = c(alcohol$country),
-                         selected = alcohol$country[1:6],
-                         multiple = TRUE,
-                         options = list(maxItems = 10)
-          ),
-          radioButtons("servings", "Select one alcohol servings to show the plot",
-                       choices = c(  "beer servings",
-                                    "spirit servings",
-                                   "wine servings"),
-                       selected = "beer servings"
-                       )
-        ),
+             h3("2.2 Let's make a plot"),
+             fluidRow(
+               sidebarLayout(
+                 sidebarPanel(
+                   selectizeInput("countries",
+                                  "Select Countries to show the plot:",
+                                  choices = c(alcohol$country),
+                                  selected = alcohol$country[1:50],
+                                  multiple = TRUE
+                   ),
+                   radioButtons("servings", "Select alcohol servings to show the plot",
+                                choices = c(  "beer servings",
+                                              "spirit servings",
+                                              "wine servings"),
+                                selected = "beer servings"
+                   )
+                 ),
 
-        mainPanel(
-          plotOutput("countrycons")
-        )
-      )
-    )
+                 mainPanel(
+                   plotlyOutput("countrycons")
+                 )
+               )
+             )
     ),
 
-tabPanel("About",
-  fluidRow(
-       column(10,
-              div(class = "about",
-                  uiOutput('about'))
-       )
-   ))),
-     includeCSS("styles.css")
+    tabPanel("About",
+             fluidRow(
+               column(10,
+                      div(class = "about",
+                          uiOutput('about'))
+               )
+             ))),
+  includeCSS("styles.css")
 )
 
 
@@ -114,95 +118,229 @@ tabPanel("About",
 
 
 
- server <- function(input, output) {
+server <- function(input, output) {
 
+
+  #part1.1
   output$distPlot <- renderPlot({
     ggplot(alcohol, aes(x = total_litres_of_pure_alcohol))+
-      geom_histogram(binwidth = input$bins, color = "white")+
+      geom_histogram(binwidth = input$bins, color = "white", fill = "#9ebcda")+
       scale_x_continuous(breaks = seq(0,15,1))+
       xlab("Total litres of pure alcohol")+
       ggtitle("Distribution of the total litres of pure alcohol")+
       theme(element_text(size = 30))+
       theme_bw(base_size = 14)
-     })
-
-  output$countryname <- renderText({
-    if (input$n1 > input$n2){
-
-      "Please set the right range."
-
-    } else {
-    country_choose <- alcohol %>%
-              filter(total_litres_of_pure_alcohol >= input$n1 &
-                     total_litres_of_pure_alcohol <= input$n2)
-      paste0(country_choose$country, sep = " , ")
-    }
-
-     })
-
-
-  output$disalcohol <- renderPlot({
-   if (input$type == "Beer"){
-      ggplot(alcohol, aes(x = beer_servings))+
-         geom_histogram(binwidth = input$bins2, color = "white")+
-         xlab("Beer servings")+
-         ggtitle("Distribution of beer servings")+
-         theme_bw(base_size = 14)
-
-   } else if(input$type == "Spirit"){
-      ggplot(alcohol, aes(x = spirit_servings))+
-         geom_histogram(binwidth = input$bins2, color = "white")+
-         xlab("Spirit servings")+
-         ggtitle("Distribution of spirit servings")+
-         theme_bw(base_size = 14)
-   } else {
-      ggplot(alcohol, aes(x = wine_servings))+
-         geom_histogram(binwidth = input$bins2, color = "white")+
-         xlab("Wine servings")+
-         ggtitle("Distribution of wine servings")+
-         theme_bw(base_size = 14)
-
-}
-   })
-
-
-  selectcountry <- reactive({
-    df <- alcohol %>%
-      filter(country %in% input$countries)
-    return(df)
   })
 
-  output$countrycons <- renderPlot({
 
-    if (input$servings == "beer servings"){
-      selectcountry() %>%
-      ggplot( aes(x = country, y = beer_servings))+
-        geom_col()+
-        xlab("Country")+
-        ylab("Beer servings")+
-        ggtitle("Beer servings by country")+
-        theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-        theme_bw(base_size = 14)
 
-    } else if(input$servings == "spirit servings"){
-      selectcountry() %>%
-        ggplot( aes(x = country, y = spirit_servings))+
-        geom_col()+
-        xlab("Country")+
-        ylab("Spirit servings")+
-        ggtitle("Spirit servings by country")+
-        theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-        theme_bw(base_size = 14)
+
+  #part1.2
+  min <- reactive({input$Litres[1]})
+  max <- reactive({input$Litres[2]})
+
+  new_map_data <- reactive({
+    new_map_data <- map_data %>%
+      filter(total_litres_of_pure_alcohol >= min() &
+               total_litres_of_pure_alcohol <= max())
+
+  })
+
+  output$countryname <- renderPlotly({
+
+    p1 <- new_map_data() %>%
+      ggplot( aes(x = long, y = lat, group = group,
+                  text = sprintf("region: %s<br>total litres of pure alcohol: %s",
+                                 region, total_litres_of_pure_alcohol)))+
+      geom_polygon(data = map_data, aes(x = long, y = lat, group = group),
+                   fill = "white", colour = "#252525")+
+      geom_polygon( aes(fill = total_litres_of_pure_alcohol), color = "#252525")+
+      scale_fill_gradient(low = "#f7fcfd",
+                          high = "#4d004b",
+                          na.value = "grey",
+                          breaks = c(0,2,4,6,8,10,12,14),
+                          labels = c(0,2,4,6,8,10,12,14))+
+      theme_void()+
+      theme(panel.grid = element_blank(),
+            axis.line.x = element_blank(),
+            axis.line.y = element_blank())+
+      labs(fill = "Litres",
+           title = "Global alcohol consumption")
+
+    plotly::ggplotly(p1,tooltip = "text")
+
+  }
+
+  )
+
+  #part2.1
+
+  min_range <- reactive({input$range[1]})
+  max_range <- reactive({input$range[2]})
+
+  range_map_data <- reactive({
+    if (input$type == "Beer"){
+      map_data %>%
+        filter(beer_servings >= min_range() &
+                 beer_servings <= max_range())
+    }else if (input$type == "Spirit"){
+      map_data %>%
+        filter(spirit_servings >= min_range() &
+                 spirit_servings <= max_range())
+    }else {
+      map_data %>%
+        filter(wine_servings >= min_range() &
+                 wine_servings <= max_range())
+    }
+
+  })
+
+  output$disalcohol <- renderPlotly({
+    if (input$type == "Beer"){
+
+      p1 <- range_map_data() %>%
+        ggplot( aes(x = long, y = lat, group = group,
+                    text = sprintf("region: %s<br>beer servings: %s",
+                                   region, beer_servings)))+
+        geom_polygon(data = map_data, aes(x = long, y = lat, group = group),
+                     fill = "white", colour = "#252525")+
+        geom_polygon( aes(fill = beer_servings), color = "#252525")+
+        scale_fill_gradient(low = "#ffffcc",
+                            high = "#800026",
+                            na.value = "grey",
+                            breaks = c(0,50,100,150,200,250,300,350,400,450),
+                            labels = c(0,50,100,150,200,250,300,350,400,450))+
+        theme_void()+
+        theme(panel.grid = element_blank(),
+              axis.line.x = element_blank(),
+              axis.line.y = element_blank())+
+        labs(fill = "Servings",
+             title = "Beer global alcohol servings")
+
+      plotly::ggplotly(p1,tooltip = "text")
+
+    } else if(input$type == "Spirit"){
+      p1 <- range_map_data() %>%
+        ggplot( aes(x = long, y = lat, group = group,
+                    text = sprintf("region: %s<br>spirit servings: %s",
+                                   region, spirit_servings)))+
+        geom_polygon(data = map_data, aes(x = long, y = lat, group = group),
+                     fill = "white", colour = "#252525")+
+        geom_polygon( aes(fill = spirit_servings), color = "#252525")+
+        scale_fill_gradient(low = "#f7fcfd",
+                            high = "#00441b",
+                            na.value = "grey",
+                            breaks = c(0,50,100,150,200,250,300,350,400,450),
+                            labels = c(0,50,100,150,200,250,300,350,400,450))+
+        theme_void()+
+        theme(panel.grid = element_blank(),
+              axis.line.x = element_blank(),
+              axis.line.y = element_blank())+
+        labs(fill = "Servings",
+             title = "Spirit global alcohol servings")
+
+      plotly::ggplotly(p1,tooltip = "text")
 
     } else {
-      selectcountry() %>%
-        ggplot( aes(x = country, y = wine_servings))+
-        geom_col()+
-        xlab("Country")+
-        ylab("Wine servings")+
-        ggtitle("Wine servings by country")+
-        theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-        theme_bw(base_size = 14)
+      p1 <- range_map_data() %>%
+        ggplot( aes(x = long, y = lat, group = group,
+                    text = sprintf("region: %s<br>wine servings: %s",
+                                   region, wine_servings)))+
+        geom_polygon(data = map_data, aes(x = long, y = lat, group = group),
+                     fill = "white", colour = "#252525")+
+        geom_polygon( aes(fill = wine_servings), color = "#252525")+
+        scale_fill_gradient(low = "#f7fcfd",
+                            high = "#4d004b",
+                            na.value = "grey",
+                            breaks = c(0,50,100,150,200,250,300,350,400,450),
+                            labels = c(0,50,100,150,200,250,300,350,400,450))+
+        theme_void()+
+        theme(panel.grid = element_blank(),
+              axis.line.x = element_blank(),
+              axis.line.y = element_blank())+
+        labs(fill = "Servings",
+             title = "wine global alcohol servings")
+
+      plotly::ggplotly(p1,tooltip = "text")
+
+    }
+  })
+
+
+
+  #part2.2
+  selectcountry <- reactive({
+    map_data %>%
+      filter(region %in% input$countries)
+  })
+
+  output$countrycons <- renderPlotly({
+
+    if (input$servings == "beer servings"){
+      p1 <- selectcountry() %>%
+        ggplot( aes(x = long, y = lat, group = group,
+                    text = sprintf("region: %s<br>beer servings: %s",
+                                   region, beer_servings)))+
+        geom_polygon(data = map_data, aes(x = long, y = lat, group = group),
+                     fill = "white", colour = "#252525")+
+        geom_polygon( aes(fill = beer_servings), color = "#252525")+
+        scale_fill_gradient(low = "#ffffcc",
+                            high = "#800026",
+                            na.value = "grey",
+                            breaks = c(0,50,100,150,200,250,300,350,400,450),
+                            labels = c(0,50,100,150,200,250,300,350,400,450))+
+        theme_void()+
+        theme(panel.grid = element_blank(),
+              axis.line.x = element_blank(),
+              axis.line.y = element_blank())+
+        labs(fill = "Servings",
+             title = "Beer global alcohol servings")
+
+      plotly::ggplotly(p1,tooltip = "text")
+
+    } else if(input$servings == "spirit servings"){
+      p1 <- selectcountry() %>%
+        ggplot( aes(x = long, y = lat, group = group,
+                    text = sprintf("region: %s<br>spirit servings: %s",
+                                   region, spirit_servings)))+
+        geom_polygon(data = map_data, aes(x = long, y = lat, group = group),
+                     fill = "white", colour = "#252525")+
+        geom_polygon( aes(fill = spirit_servings), color = "#252525")+
+        scale_fill_gradient(low = "#f7fcfd",
+                            high = "#00441b",
+                            na.value = "grey",
+                            breaks = c(0,50,100,150,200,250,300,350,400,450),
+                            labels = c(0,50,100,150,200,250,300,350,400,450))+
+        theme_void()+
+        theme(panel.grid = element_blank(),
+              axis.line.x = element_blank(),
+              axis.line.y = element_blank())+
+        labs(fill = "Servings",
+             title = "Spirit global alcohol servings")
+
+      plotly::ggplotly(p1,tooltip = "text")
+
+    } else  {
+      p1 <- selectcountry() %>%
+        ggplot( aes(x = long, y = lat, group = group,
+                    text = sprintf("region: %s<br>wine servings: %s",
+                                   region, wine_servings)))+
+        geom_polygon(data = map_data, aes(x = long, y = lat, group = group),
+                     fill = "white", colour = "#252525")+
+        geom_polygon( aes(fill = wine_servings), color = "#252525")+
+        scale_fill_gradient(low = "#f7fcfd",
+                            high = "#4d004b",
+                            na.value = "grey",
+                            breaks = c(0,50,100,150,200,250,300,350,400,450),
+                            labels = c(0,50,100,150,200,250,300,350,400,450))+
+        theme_void()+
+        theme(panel.grid = element_blank(),
+              axis.line.x = element_blank(),
+              axis.line.y = element_blank())+
+        labs(fill = "Servings",
+             title = "wine global alcohol servings")
+
+      plotly::ggplotly(p1,tooltip = "text")
     }
   })
 
@@ -218,7 +356,7 @@ tabPanel("About",
 
 
 
- shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server)
 
 
 
